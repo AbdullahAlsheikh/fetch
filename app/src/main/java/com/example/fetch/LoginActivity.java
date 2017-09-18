@@ -14,6 +14,7 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.content.Intent;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -41,8 +42,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import static android.Manifest.permission.READ_CONTACTS;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -78,7 +77,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
-
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
@@ -89,91 +87,101 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
+        mAuth = FirebaseAuth.getInstance();
 
         // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        //populateAutoComplete();
 
-        mPasswordView = (EditText) findViewById(R.id.password);
+        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);//User Enter Email
+        mPasswordView = (EditText) findViewById(R.id.password);//User Enter password
+
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
-//        findViewById(R.id.email_sign_in_button).setOnClickListener(this);
-//        findViewById(R.id.email_create_account_button).setOnClickListener(this);
 
 
-
-//        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+//        mAuth = FirebaseAuth.getInstance();
+//        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+//        mEmailSignInButton.setOnClickListener(new OnClickListener() {
 //            @Override
-//            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-//                if (id == R.id.login || id == EditorInfo.IME_NULL) {
-//                    attemptLogin();
-//                    return true;
-//                }
-//                return false;
+//            public void onClick(View view) {
+//
+//                String email = mEmailView.getText().toString();
+//                String password = mPasswordView.getText().toString();
+//                Log.d(TAG, "Account:" + email + " " + password);
+//
+//                createAccount(email,password);
 //            }
 //        });
-        mAuth = FirebaseAuth.getInstance();
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-        mEmailSignInButton.setOnClickListener(new OnClickListener() {
+//register_with_email
+        Button mRegisterButton = (Button) findViewById(R.id.register_button);
+        mRegisterButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                String email = mEmailView.getText().toString();
-                String password = mPasswordView.getText().toString();
-                Log.d(TAG, "Account:" + email + " " + password);
-
-                createAccount(email,password);
+                Log.d("Page", "Going to RegisterPage");
+                Intent i = new Intent(getApplicationContext(),RegisterActivity.class);
+                startActivity(i);
+                finish();
+                //setContentView(R.layout.activty_register);
             }
         });
-    }
 
-
-    private void createAccount(String email, String password) {
-        Log.d(TAG, "createAccount:" + email);
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+        Button mSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        mSignInButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String email = mEmailView.getText().toString();
+                String password = mPasswordView.getText().toString();
+                mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
-                        if (!task.isSuccessful()) {
-                            Toast.makeText(LoginActivity.this, "Authentication failed.",
+                        if(task.isSuccessful()){
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            Toast.makeText(LoginActivity.this, "SignIn: Successful",
+                                    Toast.LENGTH_SHORT).show();
+                            Intent i = new Intent(getApplicationContext(),OpeningActivity.class);
+                            startActivity(i);
+                        } else {
+
+                            Toast.makeText(LoginActivity.this, "SignIn: Failed",
                                     Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
-        // [END create_user_with_email]
+
+            }//End of onClick
+        });//End of SetOnClickListener
+
+
     }
 
-    private void populateAutoComplete() {
-        if (!mayRequestContacts()) {
-            return;
-        }
+//    private void populateAutoComplete() {
+//        if (!mayRequestContacts()) {
+//            return;
+//        }
+//
+//        getLoaderManager().initLoader(0, null, this);
+//    }
 
-        getLoaderManager().initLoader(0, null, this);
-    }
-
-    private boolean mayRequestContacts() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }
-        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
-            Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(android.R.string.ok, new View.OnClickListener() {
-                        @Override
-                        @TargetApi(Build.VERSION_CODES.M)
-                        public void onClick(View v) {
-                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-                        }
-                    });
-        } else {
-            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-        }
-        return false;
-    }
+//    private boolean mayRequestContacts() {
+//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+//            return true;
+//        }
+//        if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+//            return true;
+//        }
+//        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
+//            Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
+//                    .setAction(android.R.string.ok, new View.OnClickListener() {
+//                        @Override
+//                        @TargetApi(Build.VERSION_CODES.M)
+//                        public void onClick(View v) {
+//                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
+//                        }
+//                    });
+//        } else {
+//            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
+//        }
+//        return false;
+//    }
 
     /**
      * Callback received when a permissions request has been completed.
@@ -183,7 +191,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                            @NonNull int[] grantResults) {
         if (requestCode == REQUEST_READ_CONTACTS) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                populateAutoComplete();
+//                populateAutoComplete();
             }
         }
     }
